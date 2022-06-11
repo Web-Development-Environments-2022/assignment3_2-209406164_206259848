@@ -1,40 +1,38 @@
----
 openapi: 3.0.0
 info:
-  title: Grandmothers's and others recipes - An Internet development environments Project
+  title: Web Development Environment Project - Recipes Website
   description: This is an API for recipes website
   contact:
     name: Eden Chai & Arie Katz
     email: edench@post.bgu.ac.il
-    # email: ariekat@post.bgu.ac.il
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
-url: http://localhost:3000/
-# - url: https://virtserver.swaggerhub.com/arie478/RecipeSite-API-3.1/1.0.0
-  # description: SwaggerHub API Auto Mocking
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    # url: https://virtserver.swaggerhub.com/EdenChai/Assignment-3.2/1.0.0
+    url: http://localhost:3000/
+
 tags:
-- name: user account
+- name: auth
   description: User main account functions
-- name: user profile
+- name: users
   description: User main profile functions
-- name: general site
+- name: recipes
   description: Site main functions
+
 paths:
   /login:
     post:
       tags:
-      - user account
+      - auth
       summary: Logs in the user to the system.
       description: Validates the user's inputed details and establishes the session with the server.
-      operationId: userLogIn
+      operationId: Login
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserLogIn'
+              $ref: '#/components/schemas/Login'
         required: true
       responses:
         "200":
@@ -42,21 +40,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserLogIn'
+                $ref: '#/components/schemas/Login'
         "401":
           description: Logging in failed, invalid details or user is already logged in.
   /register:
     post:
       tags:
-      - user account
+      - auth
       summary: Registers a new user to the system
       description: Gets the user's inputed details and sends them to the server for account creation.
-      operationId: userRegister
+      operationId: Register
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRegister'
+              $ref: '#/components/schemas/Register'
         required: true
       responses:
         "200":
@@ -66,17 +64,17 @@ paths:
   /logout:
     post:
       tags:
-      - user account
+      - auth
       summary: Logs out the user from the system
       description: Closes the connected session between the user and the server.
-      operationId: userLogOut
+      operationId: Logout
       responses:
         "205":
           description: Either Log out completed and session connection has been terminated, or user wasn't logged in to begin with. Regardless, refresh the page.
-  /user/profile/addFavorite:
+  /users/addToFavorites:
     post:
       tags:
-      - user profile
+      - users
       summary: Marks a recipe as favorite for easy acesses later.
       description: Adds the chosen recipe to the user favorite list to be accessed from his profile.
       operationId: userFavorite
@@ -84,17 +82,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeId'
+              $ref: '#/components/schemas/recipeId'
         required: true
       responses:
         "201":
           description: Successfully added to favorites.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recipeId'
         "400":
           description: Invalid recipe Id or already favorited.
-  /user/profile/getFavourite:
+  /users/getFavorites:
     get:
       tags:
-      - user profile
+      - users
       summary: Gets all the favorite recipes.
       description: Gets all favorite recipies that the user has marked as favorite.
       responses:
@@ -106,10 +108,10 @@ paths:
                 $ref: '#/components/schemas/RecipesArr'
         "204":
           description: User have no favorite recipes.
-  /user/profile/addRecipe:
+  /users/createRecipe:
     post:
       tags:
-      - user profile
+      - users
       summary: Upload a new recipe to the user profile.
       description: Create and add a new recipe to the user recipies to be accessed from his profile.
       operationId: userAddRecipe
@@ -124,10 +126,10 @@ paths:
           description: Successfully added new recipe.
         "400":
           description: Invalid recipe details.
-  /user/profile/getRecipes:
+  /users/getRecipes:
     get:
       tags:
-      - user profile
+      - users
       summary: Gets all the user recipes
       description: Gets all recipies that the user has created.
       operationId: getRecipes
@@ -140,10 +142,10 @@ paths:
                 $ref: '#/components/schemas/RecipesArr'
         "204":
           description: User have no recipes created.
-  /site/getRandomRecipes:
+  /recipes/getRandomRecipes:
     get:
       tags:
-      - general site
+      - recipes
       summary: Brings 3 random recipes from the server.
       description: Pulls 3 random recipes from all available ones from the server in order to display in the main page for the user.
       responses:
@@ -155,10 +157,10 @@ paths:
                 $ref: '#/components/schemas/RecipesArr'
         "204":
           description: There are not enough recipes in  the server yet.
-  /site/getFamilyRecipes:
+  /recipes/getFamilyRecipes:
     get:
       tags:
-      - general site
+      - recipes
       summary: Gets all the family recipes.
       description: Gets all family recipies that has been created in the server.
       operationId: getFamilyRecipes
@@ -171,21 +173,21 @@ paths:
                 $ref: '#/components/schemas/RecipesArr'
         "204":
           description: No family recipes has been registered in the system.
-  /recipes/{recipeID}:
+  /recipes/{recipeId}:
     get:
       tags:
-      - general site
+      - recipes
       summary: Get information on a spesific recipe
       description: Show all information on a recipe that has been asked by the user.
       parameters:
-      - name: recipeID
+      - name: recipeId
         in: path
         description: Recipe Id
         required: true
         style: simple
         explode: false
         schema:
-          $ref: '#/components/schemas/RecipeId'
+          $ref: '#/components/schemas/recipeId'
       responses:
         "200":
           description: Retrived information about the specified recipe.
@@ -200,7 +202,7 @@ paths:
   /recipes/searchRecipes:
     get:
       tags:
-      - general site
+      - recipes
       summary: Search Recipe
       description: Create search object and wait to respond with returned items. You can add filter by cuisine, diet or intolerance
       parameters:
@@ -258,8 +260,7 @@ components:
     SessionIdCookie:
       type: string
       description: Session Id Cookie, used to recognize the current user on future activities in that session.
-      example: "123456"
-    UserRegister:
+    Register:
       type: object
       properties:
         username:
@@ -268,15 +269,15 @@ components:
           uniqueItems: true
           type: string
           description: Length between 3 and 8 letters only.
-          example: Testy
-        firstName:
+          example: admin
+        firstname:
           type: string
           description: First name of the user.
-          example: Testy
-        lastName:
+          example: admin
+        lastname:
           type: string
           description: Last name of the user.
-          example: Mc'test
+          example: admin
         country:
           type: string
           description: Country of the user.
@@ -287,29 +288,32 @@ components:
           type: string
           description: Length between 5 and 10 chars, one digit and one special symbol at least.
           format: password
-          example: testy@123
+          example: admin123!
         email:
           type: string
           description: Email of the user.
-          example: Testy@gmail.com
+          example: admin@gmail.com
       description: Details the user attributes.
-    UserLogIn:
+    Login:
       type: object
       properties:
         username:
           type: string
           description: Username of the User.
-          example: Testy
+          example: admin
         password:
           type: string
           description: Password of the user.
           format: password
-          example: testy@123
+          example: admin123!
       description: Details the user log in attributes.
-    RecipeId:
-      type: string
+    recipeId:
+      type: object
+      properties:
+        recipeId:
+          type: string
+          example: 324694
       description: Recipe identifier
-      example: "123456"
     RecipePreview:
       type: object
       properties:
@@ -318,9 +322,9 @@ components:
           description: The image of the recipe.
           format: URL
           example: URL
-        name:
+        title:
           type: string
-          description: Recipe name.
+          description: Recipe title.
           example: Brownies
         timeToMake:
           type: integer
@@ -343,14 +347,19 @@ components:
           type: boolean
           description: Is the recipe gluten Free?
           example: true
-        visitedBefore:
-          type: boolean
-          description: Did the user already visit the recipe?
-          example: true
-        userFavorite:
-          type: boolean
-          description: Did the user add this page to his favorite recipes?
-          example: true
+        ingredients:
+          type: string
+          description: Recipe ingredients.
+          example: '{"Flour 0.5 kg", "sugar 1 teaspoo"n, "water 200ml", "chocolate 1 plate"}'
+        instructions:
+          type: string
+          description: Recipe instructions.
+          example: '{"Mix flour sugar water and melted chocolate", "bake at 180c for 20 minutes"}'
+        servings:
+          type: integer
+          description: How many servings the recipe provides.
+          example: 3
+    
       description: Recipe object
     RecipesArr:
       type: object
@@ -363,8 +372,8 @@ components:
     RecipePractical:
       type: object
       properties:
-        recipe ID:
-          $ref: '#/components/schemas/RecipeId'
+        recipeId:
+          $ref: '#/components/schemas/recipeId'
         ingredients:
           type: string
           example: Flour - 500kg,salt - 1 tea spoon,sugar - 3 tea spoons,baking powder - 5mg.
