@@ -41,22 +41,31 @@ router.get("/getFamilyRecipes", async (req, res, next) =>
 /**
  * Searcing function
  */
- router.get("/search/:query/results/:numOfResults", async (req, res, next) => 
- {
-  const { query, numOfResults } = req.params;
-  search_details = {};
-  search_details.query = query;
-  search_details.number = numOfResults;
-  search_details.instructionsRequired = true;
-  search_details.apiKey = process.env.spooncular_apiKey;
-  await recipes_utils.extractSearch(req.query, search_details);
-  recipes_utils
-    .searchRecipes(search_details)
-    .catch((error) =>
+ router.get("/search", async (req, res, next) => 
+{
+  try
+  {
+    let search_details = 
     {
-      res.status(500).send(error);
-    });
- });
+      query: req.body.query,
+      cuisine: req.body.cuisine,
+      diet: req.body.diet,
+      intolerances: req.body.intolerances,
+      instructionsRequired: true,
+      number: req.body.number,
+      apiKey: process.env.spooncular_apiKey
+    }
+    // console.log(search_details);
+
+    let search_resualts = await recipes_utils.searchRecipes(search_details);
+    
+    res.send(search_resualts);
+  }
+  catch(error)
+  {
+    next(error);
+  }
+});
 
 /**
  * This path returns a full details of a recipe by its id

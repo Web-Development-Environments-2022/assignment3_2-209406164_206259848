@@ -15,7 +15,6 @@ async function createPersonalRecipe(user_id , title, readyInMinutes, image, vega
 {
     await DButils.execQuery(`INSERT INTO recipes(user_id , title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, ingredients, servings) 
     VALUES ('${user_id}', '${title}', '${readyInMinutes}', '${image}', '0', '${vegan}', '${vegetarian}', '${glutenFree}', '${instructions}', '${ingredients}', '${servings}')`);
-    console.log("Added user recipe to database");
 }
 
 async function getPersonalRecipes(user_id)

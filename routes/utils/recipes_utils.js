@@ -111,44 +111,20 @@ async function getFamilyRecipes()
 
 async function searchRecipes(search_details)
 {
-    let results = await axios.get(`${procces.env.api_domain}/search?${process.env.spooncular_apiKey}`,
-    {
-        params: search_details
-    }
-    );
+    let results = await axios.get(`${api_domain}/complexSearch?`, { params: search_details });
+
+    if (results.data.totalResults == 0)
+        return "Found 0 search results";
 
     let results_data = results.data.results;
     let results_id = [];
-    results_data.map((element) => 
-    {
-        results_id.push(element.id);
-    });
-
-    results_id
-
-   let results_get_details = [];
-   results_id.map((recipe_id) => results_get_details.push( getRecipeDetails(recipe_id)));
-   let results_recipes = await Promise.all(results_get_details);  
-    return results_recipes;
+    results_data.map((element) => { results_id.push(element.id); });
+    let recipes_results = await getRecipesPreview(results_id);
+    return recipes_results;
 }
-
-
-async function extractSearch(search_params, search)
-{
-    let filter_list = ["cusine", "diet", "intolerance"];
-    filter_list.forEach((filter) =>
-    {
-        if (search_params[filter])
-        {
-           search[filter] = search_params[filter];
-        }
-    });
-}
-
 
 exports.getRecipeDetails = getRecipeDetails;
 exports.getThreeRandomRecipes = getThreeRandomRecipes;
 exports.getRecipesPreview = getRecipesPreview;
 exports.getFamilyRecipes = getFamilyRecipes;
-exports.extractSearch = extractSearch;
 exports.searchRecipes = searchRecipes;

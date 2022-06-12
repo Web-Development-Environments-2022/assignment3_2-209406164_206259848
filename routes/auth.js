@@ -83,7 +83,8 @@ router.post("/Login", async (req, res, next) =>
   }
 });
 
-router.post("/Logout", function (req, res) {
+router.post("/Logout", function (req, res) 
+{
   req.session.reset();  // reset the session info --> send cookie when req.session == undefined
   res.send({ success: true, message: "Logout succeeded" });
 });
