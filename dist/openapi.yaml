@@ -5,11 +5,10 @@ info:
   contact:
     name: Eden Chai & Arie Katz
     email: edench@post.bgu.ac.il
-  version: 1.0.0
+  version: 2.0.0
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
-    # url: https://virtserver.swaggerhub.com/EdenChai/Assignment-3.2/1.0.0
     url: http://localhost:3000/
 
 tags:
@@ -36,13 +35,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Logged in successfully, session Id has been created.
+          description: Login succeeded.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Login'
         "401":
-          description: Logging in failed, invalid details or user is already logged in.
+          description: User is already logged in, one or more details are missing or username or password are incorrect.
   /register:
     post:
       tags:
@@ -58,9 +57,9 @@ paths:
         required: true
       responses:
         "200":
-          description: Registration completed, the user has been created.
+          description: User created successfully
         "401":
-          description: Registration failed, invalid inputs given or user already exist.
+          description: The user is already logged in, one or more details are missing or user name already exists.
   /logout:
     post:
       tags:
@@ -69,8 +68,10 @@ paths:
       description: Closes the connected session between the user and the server.
       operationId: Logout
       responses:
-        "205":
-          description: Either Log out completed and session connection has been terminated, or user wasn't logged in to begin with. Regardless, refresh the page.
+        "200":
+          description: Logout succeeded.
+        "401":
+          description: The user is already logged out.
   /users/addToFavorites:
     post:
       tags:
@@ -85,14 +86,14 @@ paths:
               $ref: '#/components/schemas/recipeId'
         required: true
       responses:
-        "201":
-          description: Successfully added to favorites.
+        "200":
+          description: The recipe successfully saved as favorite.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/recipeId'
         "400":
-          description: Invalid recipe Id or already favorited.
+          description: The recipe has already been marked as a favorite
   /users/getFavorites:
     get:
       tags:
@@ -101,14 +102,12 @@ paths:
       description: Gets all favorite recipies that the user has marked as favorite.
       responses:
         "200":
-          description: Returned user favorite recipies
+          description: No recipes have been marked as favorites or the recipes.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecipesArr'
-        "204":
-          description: User have no favorite recipes.
-  /users/createRecipe:
+  /users/createPersonalRecipe:
     post:
       tags:
       - users
@@ -123,26 +122,66 @@ paths:
         required: true
       responses:
         "200":
-          description: Successfully added new recipe.
-        "400":
-          description: Invalid recipe details.
-  /users/getRecipes:
+          description: Recipe created successfully.
+        "401":
+          description: One or more details are missing.
+  /users/getPreviewPersonalRecipes:
     get:
       tags:
       - users
-      summary: Gets all the user recipes
-      description: Gets all recipies that the user has created.
-      operationId: getRecipes
+      summary: Gets all the user recipes, the preview version
+      description: Gets all recipies that the user has created. Include only preview.
+      operationId: getPreviewRecipes
       responses:
         "200":
-          description: Successfully retrieved user recipes.
+          description: No personal recipes found or recipes.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecipesArr'
-        "204":
-          description: User have no recipes created.
-  /recipes/getRandomRecipes:
+  /users/getFullPersonalRecipes:
+    get:
+      tags:
+      - users
+      summary: Gets all the user recipes, the full version
+      description: Gets all recipies that the user has created. Include only full.
+      operationId: getFullRecipes
+      responses:
+        "200":
+          description: No personal recipes found or recipes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipesArr'
+  /users/getFamilyRecipes:
+    get:
+      tags:
+      - users
+      summary: Gets all the family recipes, the full version
+      description: Gets all recipies that the owners has created. Include only full.
+      operationId: getFamilyRecipes
+      responses:
+        "200":
+          description: The recipes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipesArr'
+  /users/getLastWatched:
+    get:
+      tags:
+      - users
+      summary: Gets the last watched recipes from the user.
+      description: Gets the 3 latest recipes the current logged in user watched
+      operationId: getWatched
+      responses:
+        "200":
+          description: The recipes or no recipes were watched.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipesArr'
+  /recipes/Random:
     get:
       tags:
       - recipes
@@ -155,51 +194,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecipesArr'
-        "204":
-          description: There are not enough recipes in  the server yet.
-  /recipes/getFamilyRecipes:
-    get:
-      tags:
-      - recipes
-      summary: Gets all the family recipes.
-      description: Gets all family recipies that has been created in the server.
-      operationId: getFamilyRecipes
-      responses:
-        "200":
-          description: Successfully retrieved family recipes.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecipesArr'
-        "204":
-          description: No family recipes has been registered in the system.
-  /recipes/{recipeId}:
-    get:
-      tags:
-      - recipes
-      summary: Get information on a spesific recipe
-      description: Show all information on a recipe that has been asked by the user.
-      parameters:
-      - name: recipeId
-        in: path
-        description: Recipe Id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          $ref: '#/components/schemas/recipeId'
-      responses:
-        "200":
-          description: Retrived information about the specified recipe.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RecipePreview'
-        "204":
-          description: No recipe with such id found.
-  /recipes/searchRecipes:
+  /recipes/search:
     get:
       tags:
       - recipes
@@ -248,18 +243,41 @@ paths:
           type: string
       responses:
         "200":
-          description: Successful search information about recipe
+          description: Information about recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FullRecipe'
+  /recipes/{recipeId}:
+    get:
+      tags:
+      - recipes
+      summary: Get information on a spesific recipe
+      description: Show all information on a recipe that has been asked by the user.
+      parameters:
+      - name: recipeId
+        in: path
+        description: Recipe Id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/recipeId'
+      responses:
+        "200":
+          description: Retrived information about the specified recipe.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/RecipePreview'
+        "204":
+          description: No recipe with such id found.
 components:
   schemas:
-    SessionIdCookie:
-      type: string
-      description: Session Id Cookie, used to recognize the current user on future activities in that session.
     Register:
       type: object
       properties:
@@ -317,6 +335,8 @@ components:
     RecipePreview:
       type: object
       properties:
+        recipeId:
+          $ref: '#/components/schemas/recipeId'
         image:
           type: string
           description: The image of the recipe.
@@ -359,6 +379,12 @@ components:
           type: integer
           description: How many servings the recipe provides.
           example: 3
+        is_watched :
+          type: boolean
+          example : true
+        is_favoried :
+          type: boolean
+          example : true
     
       description: Recipe object
     RecipesArr:
@@ -372,17 +398,35 @@ components:
     RecipePractical:
       type: object
       properties:
-        recipeId:
-          $ref: '#/components/schemas/recipeId'
         ingredients:
           type: string
-          example: Flour - 500kg,salt - 1 tea spoon,sugar - 3 tea spoons,baking powder - 5mg.
+          example: [
+          "2 ripe bananas",
+          "1 orange, juiced",
+          "1 cup animal crackers, ground",
+          "2 squares of Hershey's Semi-Sweet Natural Baking Chocolate, grated",
+          "1 tablespoon margarine",
+          "1/2 cup walnuts or pecans, chopped (optional)",
+          "6 tablespoons Splenda No Calorie Sweetener, Granular",
+          "12 decorative baking cups"
+          ]
         instructions:
           type: string
-          example: 1 - Turn on the oven to 180c. 2 - Put baking tray inside.
+          example: [
+          [
+            "Juice the orange.",
+            "Grate the chocolate.",
+            "Cut up the bananas in chunks and mash them well with a fork.",
+            "Place the mashed bananas in a mixing bowl; add the ground crackers, the walnuts, the margarine, and the orange juice; mix it well. Get your kids hands in there, if you can.",
+            "At this point, you can pinch off lime-sized dough with your thumb and index finger to make a dough ball with your hands.",
+            "Dirty up the dough ball with the grated chocolate and place it inside of a decorative baking cup.",
+            "Put the banana spheres inside the fridge for 1 to 2 hours before serving.",
+            "If allergic to nuts, please omit the walnuts or pecans."
+          ]
+          ]
         servings:
           type: string
-          example: 3 plates
+          example: 12
       description: Advanced data of the recipe.
     FullRecipe:
       properties:
