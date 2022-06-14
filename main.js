@@ -8,19 +8,15 @@ const DButils = require("./routes/utils/DButils");
 var cors = require('cors')
 
 var app = express();
-app.use(logger("dev")); //logger
-app.use(express.json()); // parse application/json
+app.use(logger("dev"));                   // logger
+app.use(express.json());                  // parse application/json
 app.use(
   session({
-    cookieName: "session", // the cookie key name
-    //secret: process.env.COOKIE_SECRET, // the encryption key
-    secret: "template", // the encryption key
-    duration: 24 * 60 * 60 * 1000, // expired after 20 sec
-    activeDuration: 1000 * 60 * 5, // if expiresIn < activeDuration,
-    cookie: {
-      httpOnly: false,
-    }
-    //the session will be extended by activeDuration milliseconds
+    cookieName: process.env.cookie_name,  // the cookie key name
+    secret: process.env.cookie_secret,    // the encryption key
+    duration: 24 * 60 * 60 * 1000,        // expired after 1 day
+    activeDuration: 1000 * 60 * 5,        // if expiresIn < activeDuration,
+    cookie: { httpOnly: false }           // the session will be extended by activeDuration milliseconds
   })
 );
 app.use(express.urlencoded({ extended: false })); // parse application/x-www-form-urlencoded
@@ -57,17 +53,23 @@ const auth = require("./routes/auth");
 
 
 //#region cookie middleware
-app.use(function (req, res, next) {
-  if (req.session && req.session.user_id) {
+app.use(function (req, res, next) 
+{
+  if (req.session && req.session.user_id) 
+  {
     DButils.execQuery("SELECT user_id FROM users")
-      .then((users) => {
-        if (users.find((x) => x.user_id === req.session.user_id)) {
+      .then((users) => 
+      {
+        if (users.find((x) => x.user_id === req.session.user_id)) 
+        {
           req.user_id = req.session.user_id;
         }
         next();
       })
       .catch((error) => next());
-  } else {
+  } 
+  else
+  {
     next();
   }
 });
@@ -82,7 +84,8 @@ app.use("/recipes", recipes);
 app.use(auth);
 
 // Default router
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res, next) 
+{
   console.error(err);
   res.status(err.status || 500).send({ message: err.message, success: false });
 });

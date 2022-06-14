@@ -1,3 +1,9 @@
+const DButils = require("./utils/DButils");
+/** 
+ * This class is responsible for handeling all the user (logged in and guests) logic.
+ * The class handles the random, and search actions.
+ */
+
 var express = require("express");
 var router = express.Router();
 const recipes_utils = require("./utils/recipes_utils");
@@ -10,33 +16,16 @@ router.get("/", (req, res) => res.send("im here"));
  */
  router.get("/Random", async (req, res, next) => 
  {
-  try 
+  try
   {
     let random_recipes = await recipes_utils.getThreeRandomRecipes();
     res.send(random_recipes);
-  } 
+  }
   catch (error) 
   {
     next(error);
   }
 });
-
-  /**
- * This path returns a full list of all family recipes
- */
-router.get("/getFamilyRecipes", async (req, res, next) => 
-{
-  try
-  {
-    let family_recipes = await recipes_utils.getFamilyRecipes();
-    res.send(family_recipes);
-  } 
-  catch (error) 
-  {
-    next(error);
-  }
-});
-  
 
 /**
  * Searcing function
@@ -55,10 +44,7 @@ router.get("/getFamilyRecipes", async (req, res, next) =>
       number: req.body.number,
       apiKey: process.env.spooncular_apiKey
     }
-    // console.log(search_details);
-
     let search_resualts = await recipes_utils.searchRecipes(search_details);
-    
     res.send(search_resualts);
   }
   catch(error)
@@ -74,13 +60,16 @@ router.get("/getFamilyRecipes", async (req, res, next) =>
  {
    try 
    {
-     const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
-     res.send(recipe);
-   } 
+    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
+
+    res.send(recipe);
+   }
    catch (error) 
    {
      next(error);
    }
  });
 
+
 module.exports = router;
+

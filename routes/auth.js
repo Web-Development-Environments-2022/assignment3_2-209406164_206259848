@@ -1,7 +1,13 @@
+/**
+ * This class is responsible for handeling all the user logic.
+ * The class handles the register, login and logout actions.
+ */
+
 var express = require("express");
 var router = express.Router();
 const MySql = require("../routes/utils/MySql");
 const DButils = require("../routes/utils/DButils");
+const auth_utils = require("./utils/auth_utils");
 const bcrypt = require("bcrypt");
 
 router.post("/Register", async (req, res, next) => 
@@ -10,41 +16,25 @@ router.post("/Register", async (req, res, next) =>
   {
     // Check if user already logged in
     if (req.session.user_id != undefined)
-    throw { status: 401, message: "User already logged in" };
+      res.status(401).send({ message: "The user is already logged in", success: false });
 
-    let user_details = 
-    {
-      username: req.body.username,
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
-      country: req.body.country,
-      password: req.body.password,
-      email: req.body.email,
-      // profilePic: req.body.profilePic
-    }
+    const {username, firstname, lastname, country, password, email } = req.body
 
     // Check if parameters exists
-    if (!user_details.username || !user_details.firstname || !user_details.lastname || !user_details.country || !user_details.password || !user_details.email) 
-      throw { status: 401, message: "One or more arguments are missing" };
-
-    // Validate parameters
-
+    if (!username || !firstname || !lastname || !country || !password || !email) 
+      res.status(401).send({ message: "One or more details are missing", success: false });
+    
     // Check if username already exists
     let users = [];
     users = await DButils.execQuery("SELECT username from users");
 
-    if (users.find((x) => x.username === user_details.username))
-      throw { status: 401, message: "Username already exists" };
+    if (users.find((x) => x.username === username))
+      res.status(401).send({ message: "Username already exists", success: false });
 
     // Add the new username
-    let hash_password = bcrypt.hashSync(user_details.password, parseInt(process.env.bcrypt_saltRounds));
-    
-    await DButils.execQuery(
-      `INSERT INTO users (username, firstname, lastname, country, password, email) 
-      VALUES ('${user_details.username}', '${user_details.firstname}', '${user_details.lastname}',
-      '${user_details.country}', '${hash_password}', '${user_details.email}')`
-    );
-    res.status(201).send({ message: "User created successfully", success: true });
+    let hash_password = bcrypt.hashSync(password, parseInt(process.env.bcrypt_saltRounds));
+    await auth_utils.register(username, firstname, lastname, country, hash_password, email);
+    res.status(200).send({ message: "User created successfully", success: true });
   } 
   catch (error) 
   {
@@ -59,21 +49,27 @@ router.post("/Login", async (req, res, next) =>
   {
     // Check if user already logged in
     if (req.session.user_id != undefined)
-      throw { status: 401, message: "User already logged in" };
+      res.status(401).send({ message: "The user is already logged in", success: false });
+
+    const {username, password } = req.body;
+
+    // Check if parameters exists
+    if (!username || !password)
+      res.status(401).send({ message: "One or more details are missing", success: false });
 
     // Check that username exists
     const users = await DButils.execQuery("SELECT username FROM users");
     if (!users.find((x) => x.username === req.body.username))
-      throw { status: 401, message: "Username or Password incorrect" };
+      res.status(401).send({ message: "Username or Password is incorrect", success: false });
 
     // Check that the password is correct
-    const user = (await DButils.execQuery(`SELECT * FROM users WHERE username = '${req.body.username}'`))[0];
-    if (!bcrypt.compareSync(req.body.password, user.password))
-      throw { status: 401, message: "Username or Password incorrect" };
+    const user = (await auth_utils.getUser(username))[0];
+    if (!bcrypt.compareSync(password, user.password))
+      res.status(401).send({ message: "Username or Password is incorrect", success: false });
 
     // Set cookie
     req.session.user_id = user.user_id;
-
+    
     // Return cookie
     res.status(200).send({ message: "Login succeeded", success: true });
   }
@@ -85,8 +81,13 @@ router.post("/Login", async (req, res, next) =>
 
 router.post("/Logout", function (req, res) 
 {
-  req.session.reset();  // reset the session info --> send cookie when req.session == undefined
-  res.send({ success: true, message: "Logout succeeded" });
+  // Check if user is logged in
+  if (req.session.user_id == undefined)
+    res.status(401).send({ message: "The user is already logged out", success: false });
+
+  // Reset the session info --> send cookie when req.session == undefined
+  req.session.reset();
+  res.status(200).send({ message: "Logout succeeded", success: true });
 });
 
 module.exports = router;
