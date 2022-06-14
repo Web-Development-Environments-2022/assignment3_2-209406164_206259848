@@ -18,7 +18,13 @@ router.get("/", (req, res) => res.send("im here"));
  {
   try
   {
-    let random_recipes = await recipes_utils.getThreeRandomRecipes();
+    let user_id;
+    if (!req.session.user_id)
+      user_id = -1;
+    else
+      user_id = req.session.user_id;
+    
+    let random_recipes = await recipes_utils.getThreeRandomRecipes(user_id);
     res.send(random_recipes);
   }
   catch (error) 
@@ -28,12 +34,18 @@ router.get("/", (req, res) => res.send("im here"));
 });
 
 /**
- * Searcing function
+ * This path returns recipes from searcing function
  */
  router.get("/search", async (req, res, next) => 
 {
   try
   {
+    let user_id;
+    if (!req.session.user_id)
+      user_id = -1;
+    else
+      user_id = req.session.user_id;
+
     let search_details = 
     {
       query: req.body.query,
@@ -44,8 +56,9 @@ router.get("/", (req, res) => res.send("im here"));
       number: req.body.number,
       apiKey: process.env.spooncular_apiKey
     }
-    let search_resualts = await recipes_utils.searchRecipes(search_details);
-    res.send(search_resualts);
+
+    const search_resualts = await recipes_utils.searchRecipes(user_id, search_details);
+    res.status(200).send(search_resualts);
   }
   catch(error)
   {
@@ -58,18 +71,24 @@ router.get("/", (req, res) => res.send("im here"));
  */
  router.get("/:recipeId", async (req, res, next) => 
  {
-   try 
+   try
    {
-    const recipe = await recipes_utils.getRecipeDetails(req.params.recipeId);
+    let user_id;
+    if (!req.session.user_id)
+      user_id = -1;
+    else
+      user_id = req.session.user_id;
 
-    res.send(recipe);
+    const recipe_id = req.params.recipeId;
+    const recipe = await recipes_utils.getRecipeDetails(user_id, recipe_id);
+    await recipes_utils.addToWatched(user_id, recipe_id);
+    res.status(200).send(recipe);
    }
    catch (error) 
    {
      next(error);
    }
  });
-
 
 module.exports = router;
 

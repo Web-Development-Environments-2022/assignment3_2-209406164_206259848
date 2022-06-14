@@ -18,7 +18,7 @@ async function getRecipeInformation(recipe_id)
     });
 }
 
-async function getRecipeDetails(recipe_id) 
+async function getRecipeDetails(user_id, recipe_id) 
 {
     let recipe_info = await getRecipeInformation(recipe_id);
     let { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, analyzedInstructions, extendedIngredients, servings } = recipe_info.data;
@@ -35,7 +35,6 @@ async function getRecipeDetails(recipe_id)
             return step.step;
         });
     });
-
     return {
         id: id,
         title: title,
@@ -48,13 +47,12 @@ async function getRecipeDetails(recipe_id)
         instructions: instructions,
         ingredients: ingredients,
         servings: servings,
-        markAsFavorite: false,
-        watched: false
+        is_watched : await isWatched(user_id, recipe_id),
+        is_favoried : await isFavorited(user_id, recipe_id)
     }
 }
 
-
-async function getRecipesPreview(recipes_ids_list) 
+async function getRecipesPreview(user_id, recipes_ids_list) 
 {
     let promises = [];
     recipes_ids_list.map((id) => 
@@ -62,14 +60,12 @@ async function getRecipesPreview(recipes_ids_list)
         promises.push(getRecipeInformation(id))
     });
     let info_res = await Promise.all(promises);
-    return extractPreviewRecipeDetails(info_res);
+    return extractPreviewRecipeDetails(user_id, info_res);
 }
 
-
-async function extractPreviewRecipeDetails(recipes_info) 
+async function extractPreviewRecipeDetails(user_id, recipes_info) 
 {
-    let is_watched;
-    return recipes_info.map((recipe_info) => 
+    const promises = (recipes_info.map(async (recipe_info) => 
     {
         // check the data type so it can work with different types od data
         let data = recipe_info;
@@ -78,10 +74,6 @@ async function extractPreviewRecipeDetails(recipes_info)
             data = recipe_info.data;
 
         const { id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree } = data;
-
-        is_watched = watched(1, id);
-
-
 
         return {
             id: id,
@@ -92,21 +84,22 @@ async function extractPreviewRecipeDetails(recipes_info)
             vegan: vegan,
             vegetarian: vegetarian,
             glutenFree: glutenFree,
-            is_watched : is_watched
-
+            is_watched : await isWatched(user_id, id),
+            is_favoried : await isFavorited(user_id, id)
         }
-    })
+    }))
+
+    return Promise.all(promises);
 }
 
-async function getThreeRandomRecipes() 
+async function getThreeRandomRecipes(user_id) 
 {
     let random_pool = await getRandomRecipes();
     let filterd_random_pool = random_pool.data.recipes.filter((random) => (random.instructions != "") && (random.image && random.image != ""));
-    if (filterd_random_pool.length < 3) 
+    if (filterd_random_pool.length < 3)
         return getThreeRandomRecipes();
-    return extractPreviewRecipeDetails([filterd_random_pool[0], filterd_random_pool[1], filterd_random_pool[2]]);
+    return extractPreviewRecipeDetails(user_id, [filterd_random_pool[0], filterd_random_pool[1], filterd_random_pool[2]]);
 }
-
 
 async function getRandomRecipes() 
 {
@@ -121,10 +114,8 @@ async function getRandomRecipes()
     return random_recipes;
 }
 
-
-async function searchRecipes(search_details)
+async function searchRecipes(user_id, search_details)
 {
-    console.log(search_details)
     let results = await axios.get(`${api_domain}/complexSearch?`, { params: search_details });
 
     if (results.data.totalResults == 0)
@@ -133,13 +124,13 @@ async function searchRecipes(search_details)
     let results_data = results.data.results;
     let results_id = [];
     results_data.map((element) => { results_id.push(element.id); });
-    console.log(results_id);
 
     let promises = [];
     results_id.map((id) => 
     { 
-        promises.push(getRecipeDetails(id))
+        promises.push(getRecipeDetails(user_id, id))
     });
+    
     let recipes_results = await Promise.all(promises);
 
     promises = [];
@@ -153,49 +144,39 @@ async function searchRecipes(search_details)
     return recipes_results;
 }
 
-async function watched(req,recipe)
+async function isFavorited(user_id, recipe_id)
 {
- if (req.session && req.session.user_id)
- {
-   //Add if watched
-   let watched_entry = await DButils.execQuery(`SELECT id FROM history WHERE recipe_id='${recipe.id}' AND user_id='${req.session.user_id}'`);
-   if (watched_entry.length == 0)
-   {
-    return false;
-   }
-   else
-   {
-     return true;
-   }
- }
- else
- {
-    return false;
- }
+    let result = await DButils.execQuery(`SELECT recipe_id FROM favorites WHERE user_id = '${user_id}' AND recipe_id = '${recipe_id}'`);
+    if (result.length == 0)
+        return false;
+    return true;
 }
 
-async function favorited(req,recipe)
+async function isWatched(user_id, recipe_id)
 {
- if (req.session && req.session.user_id)
- {
-   //Add if favorite
-   let favorite_entry = await DButils.execQuery(`SELECT * FROM favorites WHERE recipe_id='${recipe.id}' AND user_id='${req.session.user_id}'`);
-   
-   if (favorite_entry.length == 0)
-     return false;
-   else
-     return true;
+    let result = await DButils.execQuery(`SELECT recipe_id FROM watched WHERE user_id = '${user_id}' AND recipe_id = '${recipe_id}'`);
+    if (result.length == 0)
+        return false;
+    return true;
+}
 
- }
- else
- {
-    return false;
- }
+async function addToWatched(user_id, recipe_id)
+{
+    // Check if user not logged in
+    if (user_id == -1) return;
+
+    // Check if the user has already watched the recipe
+    let watched = await isWatched(user_id, recipe_id)
+    if (!watched)
+        await DButils.execQuery(`INSERT INTO watched(user_id, recipe_id) VALUES ('${user_id}','${recipe_id}')`);
+    else
+        await DButils.execQuery(`UPDATE watched SET time = CURRENT_TIMESTAMP WHERE user_id = '${user_id}' AND recipe_id = '${recipe_id}'`);
 }
 
 exports.getRecipeDetails = getRecipeDetails;
 exports.getThreeRandomRecipes = getThreeRandomRecipes;
 exports.getRecipesPreview = getRecipesPreview;
 exports.searchRecipes = searchRecipes;
-exports.watched = watched;
-exports.favorited = favorited;
+exports.isWatched = isWatched;
+exports.isFavorited = isFavorited;
+exports.addToWatched = addToWatched;

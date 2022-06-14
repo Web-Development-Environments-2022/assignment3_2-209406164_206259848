@@ -75,7 +75,7 @@ router.get('/getFavorites', async (req,res,next) =>
     if (recipes_id_array.length == 0)
       res.status(200).send({ message: "No recipes have been marked as favorites", success: true });
 
-    let results = await recipe_utils.getRecipesPreview(recipes_id_array);
+    let results = await recipe_utils.getRecipesPreview(user_id, recipes_id_array);
 
     res.status(200).send(results);
   }
@@ -112,7 +112,7 @@ router.post("/createPersonalRecipe", async (req, res, next) =>
     next(error);
   }
 });
- 
+
 function boolToBinary(boolean)
 {
   if (boolean)
@@ -199,7 +199,7 @@ router.get("/getFamilyRecipes", async (req, res, next) =>
     if (recipes_id_array.length == 0)
       res.status(200).send({ message: "No recipes were watched", success: true });
     
-    let results = await recipe_utils.getRecipesPreview(recipes_id_array);
+    let results = await recipe_utils.getRecipesPreview(user_id, recipes_id_array);
     res.status(200).send(results);
   }
   catch (error) 
