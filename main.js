@@ -7,7 +7,12 @@ const session = require("client-sessions");
 const DButils = require("./routes/utils/DButils");
 var cors = require('cors')
 
+var cookieParser = require("cookie-parser");
+
 var app = express();
+
+app.use(cookieParser());
+
 app.use(logger("dev"));                   // logger
 app.use(express.json());                  // parse application/json
 app.use(
