@@ -36,7 +36,7 @@ router.get("/", (req, res) => res.send("im here"));
 /**
  * This path returns recipes from searcing function
  */
- router.get("/search", async (req, res, next) => 
+ router.post("/search", async (req, res, next) => 
 {
   try
   {
