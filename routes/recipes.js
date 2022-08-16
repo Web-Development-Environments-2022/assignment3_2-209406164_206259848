@@ -73,11 +73,7 @@ router.get("/", (req, res) => res.send("im here"));
  {
    try
    {
-    let user_id;
-    if (!req.session.user_id)
-      user_id = -1;
-    else
-      user_id = req.session.user_id;
+    const user_id = req.session.user_id;
 
     const recipe_id = req.params.recipeId;
     const recipe = await recipes_utils.getRecipeDetails(user_id, recipe_id);

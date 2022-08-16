@@ -163,7 +163,7 @@ async function isWatched(user_id, recipe_id)
 async function addToWatched(user_id, recipe_id)
 {
     // Check if user not logged in
-    if (user_id == -1) return;
+    //if (user_id == -1) return;
 
     // Check if the user has already watched the recipe
     let watched = await isWatched(user_id, recipe_id)
