@@ -98,9 +98,9 @@ router.post("/createPersonalRecipe", async (req, res, next) =>
   if (!title || !readyInMinutes || !image || vegan == undefined || vegetarian == undefined || glutenFree == undefined || !ingredients || !instructions || !servings)
     res.status(401).send({message: "One or more details are missing", success: false });
 
-  vegan = boolToBinary(vegan);
-  vegetarian = boolToBinary(vegetarian);
-  glutenFree = boolToBinary(glutenFree);
+  vegan = yesNoToBinary(vegan);
+  vegetarian = yesNoToBinary(vegetarian);
+  glutenFree = yesNoToBinary(glutenFree);
   ingredients = JSON.stringify(ingredients);
   instructions = JSON.stringify(instructions);
   
@@ -113,9 +113,9 @@ router.post("/createPersonalRecipe", async (req, res, next) =>
   }
 });
 
-function boolToBinary(boolean)
+function yesNoToBinary(yesNo)
 {
-  if (boolean)
+  if (yesNo == "Yes")
     return 1;
   return 0;
 }
