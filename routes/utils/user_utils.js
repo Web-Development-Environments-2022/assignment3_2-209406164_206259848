@@ -34,11 +34,6 @@ async function getFullPersonalRecipes(user_id, recipeId)
     const recipes = await DButils.execQuery(`SELECT id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, ingredients, servings FROM recipes WHERE user_id='${user_id}' AND id='${recipeId}'`);
     return recipes;
 }
-async function getFamilyRecipes()
-{
-    let family_recipes = await DButils.execQuery(`SELECT * FROM family`);
-    return family_recipes;
-}
 
 async function getThreeLastWatchedRecipes(user_id)
 {
@@ -52,5 +47,4 @@ exports.getFavoriteRecipes = getFavoriteRecipes;
 exports.createPersonalRecipe = createPersonalRecipe;
 exports.getPreviewPersonalRecipes = getPreviewPersonalRecipes;
 exports.getFullPersonalRecipes = getFullPersonalRecipes;
-exports.getFamilyRecipes = getFamilyRecipes;
 exports.getThreeLastWatchedRecipes = getThreeLastWatchedRecipes

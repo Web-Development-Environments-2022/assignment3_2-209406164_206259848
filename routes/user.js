@@ -166,23 +166,6 @@ router.get("/getPreviewPersonalRecipes", async (req, res, next) =>
   });
 
 /**
-  * This path returns a full list of all family recipes
-  */
-router.get("/getFamilyRecipes", async (req, res, next) => 
-{
-  try
-  {
-    const family_recipes = await user_utils.getFamilyRecipes();
-    res.status(200).send(family_recipes);
-  }
-  catch (error)
-  {
-    next(error);
-  }
-});
-
-
-/**
  * This path returns 3 last watched recipes
  */
  router.get("/getLastWatched", async (req, res, next) => 
