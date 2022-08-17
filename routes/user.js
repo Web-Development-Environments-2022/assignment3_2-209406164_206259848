@@ -145,12 +145,13 @@ router.get("/getPreviewPersonalRecipes", async (req, res, next) =>
 /**
   * This path returns full personal recipes of specific user
   */
-  router.get("/getFullPersonalRecipes", async (req, res, next) => 
+  router.get("/getFullPersonalRecipes/:recipeId", async (req, res, next) => 
   {
     try 
     {
       const user_id = req.session.user_id;
-      const full_personal_recipes = await user_utils.getFullPersonalRecipes(user_id);
+      const recipeId = req.params.recipeId;
+      const full_personal_recipes = await user_utils.getFullPersonalRecipes(user_id, recipeId);
 
       // Check if there is recipes that was created
       if (full_personal_recipes.length == 0)

@@ -29,9 +29,9 @@ async function getPreviewPersonalRecipes(user_id)
     return recipes;
 }
 
-async function getFullPersonalRecipes(user_id)
+async function getFullPersonalRecipes(user_id, recipeId)
 {
-    const recipes = await DButils.execQuery(`SELECT id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, ingredients, servings FROM recipes WHERE user_id='${user_id}'`);
+    const recipes = await DButils.execQuery(`SELECT id, title, readyInMinutes, image, aggregateLikes, vegan, vegetarian, glutenFree, instructions, ingredients, servings FROM recipes WHERE user_id='${user_id}' AND id='${recipeId}'`);
     return recipes;
 }
 async function getFamilyRecipes()
